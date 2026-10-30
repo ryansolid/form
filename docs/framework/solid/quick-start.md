@@ -50,3 +50,13 @@ function App() {
 ```
 
 From here, you'll be ready to explore all of the other features of TanStack Form!
+
+## Solid 2
+
+Solid 2 apps import the same APIs from the `solid2` subpath:
+
+```tsx
+import { createForm } from '@tanstack/solid-form/solid2'
+```
+
+It has the same API as the Solid 1 entry. As with any Solid 2 state, a value read right after a write outside a reactive scope updates after the next flush (`flush()` from `solid-js`, or the next microtask). `@tanstack/solid-form-devtools` still runs on Solid 1.

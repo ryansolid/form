@@ -1,0 +1,313 @@
+import { FormApi, functionalUpdate } from '@tanstack/form-core'
+import {
+  createComponent,
+  createRenderEffect,
+  createUniqueId,
+  merge,
+  onSettled,
+  untrack,
+} from 'solid-js'
+import { useSelector } from './useSelector'
+import { Field, createField } from './createField'
+import { FormGroup } from './createFormGroup'
+import type {
+  FormAsyncValidateOrFn,
+  FormOptions,
+  FormState,
+  FormValidateOrFn,
+} from '@tanstack/form-core'
+import type { Element } from 'solid-js'
+import type { FieldComponent } from './createField'
+import type { FormGroupComponent } from './createFormGroup'
+
+export interface SolidFormApi<
+  TParentData,
+  TFormOnMount extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnChange extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnChangeAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnBlur extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnBlurAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnSubmit extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnSubmitAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnDynamic extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnDynamicAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnServer extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TSubmitMeta,
+> {
+  Field: FieldComponent<
+    TParentData,
+    TFormOnMount,
+    TFormOnChange,
+    TFormOnChangeAsync,
+    TFormOnBlur,
+    TFormOnBlurAsync,
+    TFormOnSubmit,
+    TFormOnSubmitAsync,
+    TFormOnDynamic,
+    TFormOnDynamicAsync,
+    TFormOnServer,
+    TSubmitMeta
+  >
+  FormGroup: FormGroupComponent<
+    TParentData,
+    TFormOnMount,
+    TFormOnChange,
+    TFormOnChangeAsync,
+    TFormOnBlur,
+    TFormOnBlurAsync,
+    TFormOnSubmit,
+    TFormOnSubmitAsync,
+    TFormOnDynamic,
+    TFormOnDynamicAsync,
+    TFormOnServer,
+    TSubmitMeta
+  >
+  useSelector: <
+    TSelected = NoInfer<
+      FormState<
+        TParentData,
+        TFormOnMount,
+        TFormOnChange,
+        TFormOnChangeAsync,
+        TFormOnBlur,
+        TFormOnBlurAsync,
+        TFormOnSubmit,
+        TFormOnSubmitAsync,
+        TFormOnDynamic,
+        TFormOnDynamicAsync,
+        TFormOnServer
+      >
+    >,
+  >(
+    selector?: (
+      state: NoInfer<
+        FormState<
+          TParentData,
+          TFormOnMount,
+          TFormOnChange,
+          TFormOnChangeAsync,
+          TFormOnBlur,
+          TFormOnBlurAsync,
+          TFormOnSubmit,
+          TFormOnSubmitAsync,
+          TFormOnDynamic,
+          TFormOnDynamicAsync,
+          TFormOnServer
+        >
+      >,
+    ) => TSelected,
+  ) => () => TSelected
+  /**
+   * @deprecated Use `form.useSelector` instead.
+   */
+  useStore: <
+    TSelected = NoInfer<
+      FormState<
+        TParentData,
+        TFormOnMount,
+        TFormOnChange,
+        TFormOnChangeAsync,
+        TFormOnBlur,
+        TFormOnBlurAsync,
+        TFormOnSubmit,
+        TFormOnSubmitAsync,
+        TFormOnDynamic,
+        TFormOnDynamicAsync,
+        TFormOnServer
+      >
+    >,
+  >(
+    selector?: (
+      state: NoInfer<
+        FormState<
+          TParentData,
+          TFormOnMount,
+          TFormOnChange,
+          TFormOnChangeAsync,
+          TFormOnBlur,
+          TFormOnBlurAsync,
+          TFormOnSubmit,
+          TFormOnSubmitAsync,
+          TFormOnDynamic,
+          TFormOnDynamicAsync,
+          TFormOnServer
+        >
+      >,
+    ) => TSelected,
+  ) => () => TSelected
+  Subscribe: <
+    TSelected = NoInfer<
+      FormState<
+        TParentData,
+        TFormOnMount,
+        TFormOnChange,
+        TFormOnChangeAsync,
+        TFormOnBlur,
+        TFormOnBlurAsync,
+        TFormOnSubmit,
+        TFormOnSubmitAsync,
+        TFormOnDynamic,
+        TFormOnDynamicAsync,
+        TFormOnServer
+      >
+    >,
+  >(props: {
+    selector?: (
+      state: NoInfer<
+        FormState<
+          TParentData,
+          TFormOnMount,
+          TFormOnChange,
+          TFormOnChangeAsync,
+          TFormOnBlur,
+          TFormOnBlurAsync,
+          TFormOnSubmit,
+          TFormOnSubmitAsync,
+          TFormOnDynamic,
+          TFormOnDynamicAsync,
+          TFormOnServer
+        >
+      >,
+    ) => TSelected
+    children: ((state: () => NoInfer<TSelected>) => Element) | Element
+  }) => Element
+}
+
+/**
+ * An extended version of the `FormApi` class that includes React-specific functionalities from `ReactFormApi`
+ */
+export type SolidFormExtendedApi<
+  TFormData,
+  TOnMount extends undefined | FormValidateOrFn<TFormData>,
+  TOnChange extends undefined | FormValidateOrFn<TFormData>,
+  TOnChangeAsync extends undefined | FormAsyncValidateOrFn<TFormData>,
+  TOnBlur extends undefined | FormValidateOrFn<TFormData>,
+  TOnBlurAsync extends undefined | FormAsyncValidateOrFn<TFormData>,
+  TOnSubmit extends undefined | FormValidateOrFn<TFormData>,
+  TOnSubmitAsync extends undefined | FormAsyncValidateOrFn<TFormData>,
+  TOnDynamic extends undefined | FormValidateOrFn<TFormData>,
+  TOnDynamicAsync extends undefined | FormAsyncValidateOrFn<TFormData>,
+  TOnServer extends undefined | FormAsyncValidateOrFn<TFormData>,
+  TSubmitMeta,
+> = FormApi<
+  TFormData,
+  TOnMount,
+  TOnChange,
+  TOnChangeAsync,
+  TOnBlur,
+  TOnBlurAsync,
+  TOnSubmit,
+  TOnSubmitAsync,
+  TOnDynamic,
+  TOnDynamicAsync,
+  TOnServer,
+  TSubmitMeta
+> &
+  SolidFormApi<
+    TFormData,
+    TOnMount,
+    TOnChange,
+    TOnChangeAsync,
+    TOnBlur,
+    TOnBlurAsync,
+    TOnSubmit,
+    TOnSubmitAsync,
+    TOnDynamic,
+    TOnDynamicAsync,
+    TOnServer,
+    TSubmitMeta
+  >
+export function createForm<
+  TParentData,
+  TFormOnMount extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnChange extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnChangeAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnBlur extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnBlurAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnSubmit extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnSubmitAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnDynamic extends undefined | FormValidateOrFn<TParentData>,
+  TFormOnDynamicAsync extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TFormOnServer extends undefined | FormAsyncValidateOrFn<TParentData>,
+  TSubmitMeta,
+>(
+  opts?: () => FormOptions<
+    TParentData,
+    TFormOnMount,
+    TFormOnChange,
+    TFormOnChangeAsync,
+    TFormOnBlur,
+    TFormOnBlurAsync,
+    TFormOnSubmit,
+    TFormOnSubmitAsync,
+    TFormOnDynamic,
+    TFormOnDynamicAsync,
+    TFormOnServer,
+    TSubmitMeta
+  >,
+) {
+  // Read once to create the form; later changes go through `api.update`.
+  const options = untrack(() => opts?.())
+  /**
+   * `FormApi` falls back to `uuid()` when no `formId` is given, which differs
+   * between the server render and the client render. `createUniqueId` is
+   * Solid's SSR-safe counterpart, so binding the id (`<form id={form.formId}>`)
+   * no longer produces a hydration mismatch. Mirrors `useFormId` in the React,
+   * Preact, and Vue adapters.
+   */
+  const fallbackFormId = createUniqueId()
+  const api = new FormApi<
+    TParentData,
+    TFormOnMount,
+    TFormOnChange,
+    TFormOnChangeAsync,
+    TFormOnBlur,
+    TFormOnBlurAsync,
+    TFormOnSubmit,
+    TFormOnSubmitAsync,
+    TFormOnDynamic,
+    TFormOnDynamicAsync,
+    TFormOnServer,
+    TSubmitMeta
+  >({ ...options, formId: options?.formId ?? fallbackFormId })
+  const extendedApi: typeof api &
+    SolidFormApi<
+      TParentData,
+      TFormOnMount,
+      TFormOnChange,
+      TFormOnChangeAsync,
+      TFormOnBlur,
+      TFormOnBlurAsync,
+      TFormOnSubmit,
+      TFormOnSubmitAsync,
+      TFormOnDynamic,
+      TFormOnDynamicAsync,
+      TFormOnServer,
+      TSubmitMeta
+    > = api as never
+
+  extendedApi.Field = (props) =>
+    createComponent(Field, merge(props, { form: api }) as never)
+  extendedApi.FormGroup = (props) =>
+    createComponent(FormGroup, merge(props, { form: api }) as never)
+  extendedApi.useSelector = (selector) => useSelector(api.store, selector)
+  /** @deprecated Use `form.useSelector` instead. */
+  extendedApi.useStore = extendedApi.useSelector
+  extendedApi.Subscribe = (props) =>
+    functionalUpdate(props.children, useSelector(api.store, props.selector))
+
+  onSettled(() => api.mount())
+
+  /**
+   * formApi.update should not have any side effects. Think of it like a `useRef`
+   * that we need to keep updated every render with the most up-to-date information.
+   */
+  createRenderEffect(
+    () => opts?.(),
+    (next) => {
+      api.update(next)
+    },
+  )
+
+  return extendedApi
+}
